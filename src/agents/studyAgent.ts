@@ -2,12 +2,13 @@ import { UserContext } from "@/lib/auth-user";
 import { openaiClient } from "@/lib/openai-client";
 import { tools } from "@/lib/tool-definitions";
 import { runTool } from "@/lib/tool-runner";
-
+import { recordToolLog } from "@/lib/observability";
 
 export const AGENT_LIMITS = {
   maxSteps: 3,
   maxToolCalls: 5,
   toolTimeoutMs: 15_000,
+  maxOutputTokens: 800,
 } as const;
 
 const allowedTools = new Set(["searchKnowledgeBase", "saveNote", "createTodo"]);
@@ -33,12 +34,54 @@ const instructions = `
 8. 工具执行完成后，再生成最终回答。
 `.trim();
 
+export type AgentMeta = {
+  requestId: string;
+  model: string;
+};
+
 type AgentResult = {
   answer: string;
   steps: number;
   toolCalls: number;
+  usage: AgentUsage;
   stoppedReason?: string;
 };
+
+type AgentUsage = {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+};
+
+type ToolOutput = {
+  type: "function_call_output";
+  call_id: string;
+  output: string;
+};
+
+function createEmptyUsage(): AgentUsage {
+  return {
+    inputTokens: 0,
+    outputTokens: 0,
+    totalTokens: 0,
+  };
+}
+
+function addUsage(
+  total: AgentUsage,
+  usage:
+    | {
+        input_tokens?: number | null;
+        output_tokens?: number | null;
+        total_tokens?: number | null;
+      }
+    | null
+    | undefined,
+) {
+  total.inputTokens += usage?.input_tokens ?? 0;
+  total.outputTokens += usage?.output_tokens ?? 0;
+  total.totalTokens += usage?.total_tokens ?? 0;
+}
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -92,10 +135,40 @@ function stableStringify(value: unknown): string {
     .join(",")}}`;
 }
 
+function isTimeoutError(error: unknown) {
+  return error instanceof Error && error.message === "工具执行超时";
+}
+
+async function writeToolLog(
+  context: UserContext,
+  meta: AgentMeta,
+  data: {
+    toolName: string;
+    argumentsValue: unknown;
+    result?: unknown;
+    status: "success" | "failed" | "timeout";
+    errorCode?: string;
+    durationMs: number;
+  },
+) {
+  await recordToolLog(context.supabase, {
+    requestId: meta.requestId,
+    userId: context.userId,
+    toolName: data.toolName,
+    arguments: data.argumentsValue,
+    result: data.result ?? null,
+    status: data.status,
+    errorCode: data.errorCode,
+    durationMs: data.durationMs,
+    model: meta.model,
+  });
+}
+
 export async function executeToolSafely(
   name: string,
   argumentsValue: unknown,
   context: UserContext,
+  meta: AgentMeta,
   timeoutMs: number = AGENT_LIMITS.toolTimeoutMs,
 ) {
   if (!allowedTools.has(name)) {
@@ -113,27 +186,21 @@ export async function executeToolSafely(
    */
   const maxAttempts = name === "searchKnowledgeBase" ? 2 : 1;
 
-  //   let lastError: unknown;
-
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const startedAt = Date.now();
     try {
-      const startedAt = Date.now();
-
       const result = await withTimeout(
         runTool(name, argumentsValue, context),
         timeoutMs,
       );
 
-      const durationMs = Date.now() - startedAt;
-
       // 记录工具调用
-      await context.supabase.from("tool_logs").insert({
-        user_id: context.userId,
-        tool_name: name,
-        arguments: argumentsValue,
+      await writeToolLog(context, meta, {
+        toolName: name,
+        argumentsValue,
         result,
         status: "success",
-        duration_ms: durationMs,
+        durationMs: Date.now() - startedAt,
       });
 
       return {
@@ -141,12 +208,24 @@ export async function executeToolSafely(
         result,
       };
     } catch (error) {
+      const timeout = isTimeoutError(error);
       //   lastError = error;
+      const status = timeout ? "timeout" : "failed";
 
       console.error("Tool execution failed", {
         tool: name,
         attempt,
-        error,
+        status,
+        error: getErrorMessage(error),
+      });
+
+      await writeToolLog(context, meta, {
+        toolName: name,
+        argumentsValue,
+        result: null,
+        status,
+        errorCode: timeout ? "TOOL_TIMEOUT" : "TOOL_FAILED",
+        durationMs: Date.now() - startedAt,
       });
 
       if (attempt === maxAttempts) {
@@ -165,19 +244,23 @@ export async function executeToolSafely(
 export async function runStudyAgent(
   query: string,
   context: UserContext,
+  meta: AgentMeta,
 ): Promise<AgentResult> {
-  const model = process.env.OPENAI_MODEL ?? "gpt-5.6-luna";
+  const usage = createEmptyUsage();
   const seenToolCalls = new Set<string>();
 
   let response = await openaiClient.responses.create({
-    model,
+    model: meta.model,
     instructions,
     input: query,
     tools,
     tool_choice: "auto",
+    max_output_tokens: AGENT_LIMITS.maxOutputTokens,
   });
 
   let totalToolCalls = 0;
+
+  addUsage(usage, response.usage);
 
   for (let step = 1; step <= AGENT_LIMITS.maxSteps; step++) {
     const toolCalls = response.output.filter(
@@ -192,6 +275,7 @@ export async function runStudyAgent(
         answer: response.output_text || "模型没有生成回答。",
         steps: step,
         toolCalls: totalToolCalls,
+        usage,
       };
     }
 
@@ -204,14 +288,11 @@ export async function runStudyAgent(
         steps: step,
         toolCalls: totalToolCalls,
         stoppedReason: "max_tool_calls",
+        usage,
       };
     }
 
-    const toolOutputs: Array<{
-      type: "function_call_output";
-      call_id: string;
-      output: string;
-    }> = [];
+    const toolOutputs: ToolOutput[] = [];
 
     for (const toolCall of toolCalls) {
       let toolArguments: unknown;
@@ -259,6 +340,7 @@ export async function runStudyAgent(
         toolCall.name,
         toolArguments,
         context,
+        meta,
       );
 
       toolOutputs.push({
@@ -275,13 +357,16 @@ export async function runStudyAgent(
      * previous_response_id 表示这是上一次响应的继续。
      */
     response = await openaiClient.responses.create({
-      model,
+      model: meta.model,
       instructions,
       previous_response_id: response.id,
       input: toolOutputs,
       tools,
       tool_choice: "auto",
+      max_output_tokens: AGENT_LIMITS.maxOutputTokens,
     });
+
+    addUsage(usage, response.usage);
   }
 
   return {
@@ -289,5 +374,6 @@ export async function runStudyAgent(
     steps: AGENT_LIMITS.maxSteps,
     toolCalls: totalToolCalls,
     stoppedReason: "max_steps",
+    usage,
   };
 }

@@ -15,11 +15,6 @@ type ToolFailure = {
   error: string;
 };
 
-export type ToolContext = {
-  supabase: SupabaseClient;
-  userId: string;
-};
-
 export type ToolResult = ToolSuccess | ToolFailure;
 
 const SearchArgsSchema = z
@@ -62,7 +57,7 @@ export async function runTool(
 ) {
   switch (name) {
     case "searchKnowledgeBase":
-      return runSearchKnowledgeBase(rawArguments);
+      return runSearchKnowledgeBase(rawArguments, context);
 
     case "saveNote":
       return runSaveNote(rawArguments, context);
@@ -77,7 +72,7 @@ export async function runTool(
 
 export async function runSearchKnowledgeBase(
   rawArguments: unknown,
-  // context: UserContext,
+  context: UserContext,
 ) {
   const parsed = SearchArgsSchema.safeParse(rawArguments);
 
@@ -96,10 +91,14 @@ export async function runSearchKnowledgeBase(
     throw new Error("问题 Embedding 生成失败");
   }
 
-  const results = await searchKnowledgeBase(embedding, {
-    topK: 5,
-    threshold: 0.2,
-  });
+  const results = await searchKnowledgeBase(
+    embedding,
+    {
+      topK: 5,
+      threshold: 0.2,
+    },
+    context.supabase,
+  );
 
   return {
     query: parsed.data.query,

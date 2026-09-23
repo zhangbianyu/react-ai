@@ -13,6 +13,11 @@ type RequestLog = {
   errorCode?: string;
 };
 
+export type ToolExecutionMeta = {
+  requestId: string;
+  model?: string;
+};
+
 export async function recordRequestLog(
   supabase: SupabaseClient,
   log: RequestLog,
