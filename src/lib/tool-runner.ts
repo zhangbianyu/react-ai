@@ -18,8 +18,6 @@ type ToolFailure = {
 export type ToolContext = {
   supabase: SupabaseClient;
   userId: string;
-  requestId: string;
-  model: string;
 };
 
 export type ToolResult = ToolSuccess | ToolFailure;
