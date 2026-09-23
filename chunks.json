@@ -1,0 +1,42 @@
+[
+  {
+    "id": "react-notes.md:1",
+    "index": 0,
+    "text": "# React 学习笔记\n\nReact 是一个用于构建用户界面的 JavaScript 库。",
+    "title": "React 学习笔记",
+    "source": "react-notes.md",
+    "charCount": 46
+  },
+  {
+    "id": "react-notes.md:2",
+    "index": 1,
+    "text": "## 组件\n\n组件是 React 应用的基本组成单位。\n组件可以接收输入，并返回一段界面描述。\n\n一个组件通常是一个 JavaScript 函数：\n\nfunction Welcome() {\n  return <h1>Hello React</h1>;\n}",
+    "title": "组件",
+    "source": "react-notes.md",
+    "charCount": 128
+  },
+  {
+    "id": "react-notes.md:3",
+    "index": 2,
+    "text": "## Props\n\nProps 用于从父组件向子组件传递数据。\nProps 是只读的，子组件不应该直接修改 Props。\n\nfunction UserCard({ name }) {\n  return <div>{name}</div>;\n}",
+    "title": "Props",
+    "source": "react-notes.md",
+    "charCount": 121
+  },
+  {
+    "id": "react-notes.md:4",
+    "index": 3,
+    "text": "## State\n\nState 用于保存组件内部会变化的数据。\n当 State 发生变化时，React 通常会重新渲染组件。\n\nconst [count, setCount] = useState(0);",
+    "title": "State",
+    "source": "react-notes.md",
+    "charCount": 102
+  },
+  {
+    "id": "react-notes.md:5",
+    "index": 4,
+    "text": "## Hooks\n\nHooks 是以 use 开头的特殊函数。\n常见的 Hooks 包括 useState、useEffect 和 useMemo。",
+    "title": "Hooks",
+    "source": "react-notes.md",
+    "charCount": 74
+  }
+]

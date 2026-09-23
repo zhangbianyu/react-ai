@@ -1,0 +1,142 @@
+[
+  {
+    "id": "rag-001",
+    "question": "什么是 Embedding？",
+    "type": "answerable",
+    "expectedSources": ["day11-upload-test.md"],
+    "expectedKeywords": ["向量", "文本"]
+  },
+  {
+    "id": "rag-002",
+    "question": "RAG 的完整流程是什么？",
+    "type": "answerable",
+    "expectedSources": ["day11-upload-test.md"],
+    "expectedKeywords": ["上传", "切分", "Embedding", "检索"]
+  },
+  {
+    "id": "rag-003",
+    "question": "为什么需要给 Chunk 保存 Metadata？",
+    "type": "answerable",
+    "expectedSources": ["day11-upload-test.txt", "day11-upload-test.md"],
+    "expectedKeywords": ["来源", "顺序", "sourceHash"]
+  },
+  {
+    "id": "rag-004",
+    "question": "如何判断同一个文件是否重复上传？",
+    "type": "answerable",
+    "expectedSources": ["day11-upload-test.txt"],
+    "expectedKeywords": ["SHA-256", "哈希"]
+  },
+  {
+    "id": "rag-005",
+    "question": "Chunk 的大小和 overlap 分别有什么作用？",
+    "type": "answerable",
+    "expectedSources": ["day11-upload-test.txt"],
+    "expectedKeywords": ["Chunk", "overlap"]
+  },
+  {
+    "id": "rag-006",
+    "question": "上传文档后为什么要保存向量？",
+    "type": "answerable",
+    "expectedSources": ["day11-upload-test.txt"],
+    "expectedKeywords": ["向量数据库", "检索"]
+  },
+  {
+    "id": "rag-007",
+    "question": "每个 Chunk 应该保存哪些信息？",
+    "type": "answerable",
+    "expectedSources": ["day11-upload-test.txt", "day11-upload-test.md"],
+    "expectedKeywords": ["来源", "内容", "sourceHash"]
+  },
+  {
+    "id": "rag-008",
+    "question": "为什么语义相近的问题可以检索到相关文本？",
+    "type": "answerable",
+    "expectedSources": ["day11-upload-test.md"],
+    "expectedKeywords": ["Embedding", "向量"]
+  },
+  {
+    "id": "rag-009",
+    "question": "导入成功后应该检查数据库中的哪些字段？",
+    "type": "answerable",
+    "expectedSources": ["day11-upload-test.txt"],
+    "expectedKeywords": ["content", "embedding", "metadata"]
+  },
+  {
+    "id": "rag-010",
+    "question": "为什么相邻 Chunk 需要保留 overlap？",
+    "type": "answerable",
+    "expectedSources": ["day11-upload-test.txt"],
+    "expectedKeywords": ["重要信息", "切断"]
+  },
+  {
+    "id": "rag-011",
+    "question": "Supabase 用户登录应该如何实现？",
+    "type": "unanswerable",
+    "expectedSources": [],
+    "expectedKeywords": ["资料中没有找到答案"]
+  },
+  {
+    "id": "rag-012",
+    "question": "如何给学习助手部署到 Vercel？",
+    "type": "unanswerable",
+    "expectedSources": [],
+    "expectedKeywords": ["资料中没有找到答案"]
+  },
+  {
+    "id": "rag-013",
+    "question": "如何实现 Agent 工具调用？",
+    "type": "unanswerable",
+    "expectedSources": [],
+    "expectedKeywords": ["资料中没有找到答案"]
+  },
+  {
+    "id": "rag-014",
+    "question": "如何计算 OpenAI API 的具体费用？",
+    "type": "unanswerable",
+    "expectedSources": [],
+    "expectedKeywords": ["资料中没有找到答案"]
+  },
+  {
+    "id": "rag-015",
+    "question": "如何实现多用户数据隔离？",
+    "type": "unanswerable",
+    "expectedSources": [],
+    "expectedKeywords": ["资料中没有找到答案"]
+  },
+  {
+    "id": "rag-016",
+    "question": "Embedding 是不是每个汉字对应一个向量？",
+    "type": "confusing",
+    "expectedSources": ["day11-upload-test.md"],
+    "expectedKeywords": ["整段", "向量"]
+  },
+  {
+    "id": "rag-017",
+    "question": "RAG 是不是只进行关键词匹配？",
+    "type": "confusing",
+    "expectedSources": ["day11-upload-test.md"],
+    "expectedKeywords": ["语义", "向量"]
+  },
+  {
+    "id": "rag-018",
+    "question": "sourceHash 是不是根据文件名生成的？",
+    "type": "confusing",
+    "expectedSources": ["day11-upload-test.txt"],
+    "expectedKeywords": ["文件内容", "SHA-256"]
+  },
+  {
+    "id": "rag-019",
+    "question": "相似度越高是不是代表答案一定正确？",
+    "type": "confusing",
+    "expectedSources": ["day11-upload-test.md"],
+    "expectedKeywords": ["相似度", "答案"]
+  },
+  {
+    "id": "rag-020",
+    "question": "Chunk 越大，检索效果是不是一定越好？",
+    "type": "confusing",
+    "expectedSources": ["day11-upload-test.txt"],
+    "expectedKeywords": ["Chunk", "无关"]
+  }
+]
