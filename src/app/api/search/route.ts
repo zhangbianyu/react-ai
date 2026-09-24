@@ -125,7 +125,7 @@ export async function POST(request: Request) {
       await recordRequestLog(userContext.supabase, {
         requestId,
         userId: userContext.userId,
-        route: "/api/example",
+        route: "/api/search",
         durationMs: 0,
         status: "error",
         errorCode: "REQUEST_FAILED",

@@ -13,5 +13,10 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    exclude: [
+      "**/node_modules/**",
+      "**/.{git,cache,output,temp}/**",
+      "**/e2e/**",
+    ],
   },
 });

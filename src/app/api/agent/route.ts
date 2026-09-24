@@ -9,9 +9,10 @@ import { checkDailyTokenQuota } from "@/lib/token-quota";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const requestId = getRequestId(request);
+
   try {
     const body = await request.json();
-    const requestId = getRequestId(request);
     const startedAt = Date.now();
     const model = process.env.OPENAI_MODEL ?? "gpt-5.6-luna";
     const query = typeof body.query === "string" ? body.query.trim() : "";
@@ -102,8 +103,14 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: "Agent execution failed",
+        requestId,
       },
-      { status: 500 },
+      {
+        status: 500,
+        headers: {
+          "x-request-id": requestId,
+        },
+      },
     );
   }
 }
