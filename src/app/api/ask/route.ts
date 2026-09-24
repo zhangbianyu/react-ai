@@ -9,9 +9,10 @@ import { recordRequestLog } from "@/lib/observability";
 
 export async function POST(request: Request) {
   const requestId = getRequestId(request);
-  const { supabase, userId } = await getRequiredUser();
   const model = process.env.OPENAI_MODEL ?? "你的可用模型名称";
+
   try {
+    const { supabase, userId } = await getRequiredUser();
     const startedAt = Date.now();
 
     const body = await request.json();

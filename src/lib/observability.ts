@@ -18,6 +18,20 @@ export type ToolExecutionMeta = {
   model?: string;
 };
 
+function sanitizeToolArguments(toolName: string, value: unknown) {
+  if (toolName === "saveNote" && value && typeof value === "object") {
+    const input = value as Record<string, unknown>;
+
+    return {
+      title: input.title,
+      contentLength:
+        typeof input.content === "string" ? input.content.length : 0,
+    };
+  }
+
+  return value;
+}
+
 export async function recordRequestLog(
   supabase: SupabaseClient,
   log: RequestLog,
@@ -58,7 +72,7 @@ export async function recordToolLog(
     request_id: data.requestId,
     user_id: data.userId,
     tool_name: data.toolName,
-    arguments: data.arguments,
+    arguments: sanitizeToolArguments(data.toolName, data.arguments),
     result: data.result ?? null,
     status: data.status,
     error_code: data.errorCode ?? null,

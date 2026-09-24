@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import path from "node:path";
 import { NextResponse } from "next/server";
 import { embedTexts } from "@/lib/embeddings";
 import { splitText } from "@/lib/chunking";
@@ -25,15 +26,30 @@ function isAllowedFile(file: File) {
   );
 }
 
-export async function POST(request: Request) {
-  const { supabase, user } = await getRequiredUser();
-
+function decodeUtf8Text(buffer: Buffer) {
   try {
+    return new TextDecoder("utf-8", {
+      fatal: true,
+    }).decode(buffer);
+  } catch {
+    throw new Error("Only UTF-8 text files are supported");
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { supabase, user } = await getRequiredUser();
     const formData = await request.formData();
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "请上传文件" }, { status: 400 });
+    }
+
+    const safeFilename = path.basename(file.name);
+
+    if (safeFilename !== file.name || safeFilename.length > 200) {
+      return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
     }
 
     if (!isAllowedFile(file)) {
@@ -48,15 +64,21 @@ export async function POST(request: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    // console.log("buffer111", buffer);
 
     const sourceHash = crypto.createHash("sha256").update(buffer).digest("hex");
 
-    const text = buffer.toString("utf8").trim();
-    // console.log("text111", text);
+    // const text = buffer.toString("utf8").trim();
+    const text = decodeUtf8Text(buffer).trim();
 
     if (!text) {
       return NextResponse.json({ error: "不能上传空文档" }, { status: 400 });
+    }
+
+    if (text.includes("\u0000")) {
+      return NextResponse.json(
+        { error: "Binary files are not supported" },
+        { status: 415 },
+      );
     }
 
     const { data: duplicate, error: duplicateError } = await supabase
@@ -78,16 +100,14 @@ export async function POST(request: Request) {
     }
 
     const chunks = splitText(text, 500, 80);
-    // console.log('chunks111',chunks);
 
     const embeddings = await embedTexts(chunks.map((content) => content));
-    // console.log('embeddings111',embeddings);
 
     const { data: document, error: documentError } = await supabase
       .from("documents")
       .insert({
         user_id: user.id,
-        filename: file.name,
+        filename: safeFilename,
         source_hash: sourceHash,
       })
       .select("id")

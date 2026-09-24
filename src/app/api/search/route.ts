@@ -1,16 +1,24 @@
 import { NextResponse } from "next/server";
 import { openaiClient } from "@/lib/openai-client";
 import { searchKnowledgeBase } from "@/lib/knowledge-base";
-import { getRequiredUser, UnauthorizedError } from "@/lib/auth-user";
+import {
+  getRequiredUser,
+  UnauthorizedError,
+  UserContext,
+} from "@/lib/auth-user";
 import { getRequestId } from "@/lib/request-id";
 import { logger } from "@/lib/logger";
 import { recordRequestLog } from "@/lib/observability";
 
 export async function POST(request: Request) {
   const requestId = getRequestId(request);
-  const { supabase, userId } = await getRequiredUser();
+
+  // 登录成功后赋值，未登录时保持 null
+  let userContext: UserContext | null = null;
 
   try {
+    userContext = await getRequiredUser();
+    const { supabase, userId } = userContext;
     const startedAt = Date.now();
 
     logger.info("request.started", {
@@ -93,15 +101,35 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("POST /api/search failed", error);
 
-    logger.error("request.failed", {
-      requestId,
-      route: "/api/search",
-      userId,
-      error: "search_failed",
-    });
+    // logger.error("request.failed", {
+    //   requestId,
+    //   route: "/api/search",
+    //   userId,
+    //   error: "search_failed",
+    // });
 
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized", requestId },
+        {
+          status: 401,
+          headers: {
+            "x-request-id": requestId,
+          },
+        },
+      );
+    }
+
+    // 只有已经登录成功，才有能力记录用户级 request_logs
+    if (userContext) {
+      await recordRequestLog(userContext.supabase, {
+        requestId,
+        userId: userContext.userId,
+        route: "/api/example",
+        durationMs: 0,
+        status: "error",
+        errorCode: "REQUEST_FAILED",
+      });
     }
 
     return NextResponse.json(
