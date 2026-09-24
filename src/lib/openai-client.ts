@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { fetch as undiciFetch, ProxyAgent } from "undici";
 
-const proxyUrl = process.env.HTTPS_PROXY;
+const proxyUrl = process.env.OPENAI_HTTPS_PROXY;
 const baseURL = process.env.OPENAI_BASE_URL;
 
 const compatibleFetch = undiciFetch as unknown as typeof globalThis.fetch;
