@@ -325,11 +325,11 @@ export default function HomePage() {
     <main className="page-shell">
       <section className="chat-panel" aria-label="AI 学习助手">
         <header className="panel-header">
-          <div>
+          {/* <div>
             <p className="eyebrow">DAY 07 / LLM BASICS</p>
             <h1>AI 学习助手</h1>
             <p className="subtitle">用对话复习 LLM、Prompt、RAG 和 Agent</p>
-          </div>
+          </div> */}
 
           <button
             className="secondary-button"

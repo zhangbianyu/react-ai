@@ -1,33 +1,17 @@
-import OpenAI from "openai";
-import { fetch, ProxyAgent } from "undici";
 import dotenv from "dotenv";
 import { chunks } from "./chunk.mjs";
 import { writeFile } from "node:fs/promises";
+import { openaiClient } from "@/lib/openai-client";
 
 dotenv.config({
   path: ".env.local",
 });
 
 const apiKey = process.env.OPENAI_API_KEY;
-const baseURL = process.env.OPENAI_BASE_URL;
-const proxyUrl = process.env.HTTPS_PROXY;
 
 if (!apiKey) {
   throw new Error("缺少 OPENAI_API_KEY");
 }
-
-const client = new OpenAI({
-  apiKey,
-  baseURL,
-  timeout: 60000,
-  maxRetries: 2,
-  fetch,
-  fetchOptions: proxyUrl
-    ? {
-        dispatcher: new ProxyAgent(proxyUrl),
-      }
-    : undefined,
-});
 
 // const embeddingModel = "text-embedding-3-small";
 
@@ -126,7 +110,7 @@ const client = new OpenAI({
 async function embedChunks(chunks) {
   const texts = chunks.map((chunk) => chunk.text);
 
-  const response = await client.embeddings.create({
+  const response = await openaiClient.embeddings.create({
     model: process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small",
     input: texts,
     encoding_format: "float",
