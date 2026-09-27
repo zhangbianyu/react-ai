@@ -61,6 +61,131 @@ select:disabled {
   opacity: 0.55;
 }
 
+.site-header {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 28px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.site-brand {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.site-account {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 14px;
+  min-width: 0;
+}
+
+.site-email {
+  max-width: 280px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-link,
+.sign-out-button,
+.auth-switch {
+  border: 0;
+  background: transparent;
+  color: var(--accent-dark);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-link:hover,
+.sign-out-button:hover,
+.auth-switch:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.sign-out-button {
+  padding: 6px 0;
+}
+
+.auth-page {
+  min-height: calc(100vh - 64px);
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+}
+
+.auth-panel {
+  width: min(420px, 100%);
+  padding: 32px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 20px 50px rgba(24, 33, 31, 0.07);
+}
+
+.auth-panel h1 {
+  margin-bottom: 24px;
+  font-size: 30px;
+}
+
+.auth-form {
+  display: grid;
+  gap: 9px;
+}
+
+.auth-form label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-form input {
+  min-height: 44px;
+  margin-bottom: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: white;
+  color: var(--ink);
+}
+
+.auth-form input:focus {
+  outline: 2px solid rgba(29, 107, 91, 0.25);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.auth-switch {
+  margin-top: 20px;
+  padding: 0;
+  font-size: 14px;
+}
+
+.auth-error {
+  margin: 4px 0;
+}
+
+.auth-message {
+  margin: 4px 0;
+  color: var(--accent-dark);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .page-shell {
   min-height: 100vh;
   padding: 48px 20px;
@@ -267,7 +392,24 @@ select:focus {
 }
 
 @media (max-width: 640px) {
+  .site-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 14px 20px;
+  }
+
+  .site-account {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .site-email {
+    max-width: 45vw;
+  }
+
   .page-shell {
+    min-height: calc(100vh - 112px);
     padding: 0;
   }
 
