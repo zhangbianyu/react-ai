@@ -85,3 +85,7 @@ src/
 
 - [OpenAI Developer Quickstart](https://developers.openai.com/api/docs/quickstart)
 - [Streaming API responses](https://developers.openai.com/api/docs/guides/streaming-responses)
+
+
+## Supabase 各种key
+anon key :  Project Settings -> API Keys -> View legacy API keys

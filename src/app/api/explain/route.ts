@@ -141,7 +141,7 @@
 // }
 
 // day 6  启流式输出
-import OpenAI from "openai";
+import { openaiClient } from "@/lib/openai-client";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -208,13 +208,12 @@ export async function POST(request: Request) {
       return json({ error: "服务端缺少 OPENAI_API_KEY 或 OPENAI_MODEL" }, 500);
     }
 
-    const client = new OpenAI({ apiKey });
     const learnerDescription =
       level === "advanced"
         ? "用户有开发经验，可以使用专业术语，并说明工程实践。"
         : "用户是初学者，请使用简单语言、类比和短代码示例。";
 
-    const stream = await client.responses.create({
+    const stream = await openaiClient.responses.create({
       model,
       instructions: `
 你是一名中文 AI 技术老师。
